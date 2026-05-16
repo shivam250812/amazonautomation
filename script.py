@@ -360,6 +360,12 @@ async def scrape_product(context, url):
     try:
         await page.goto(url, timeout=30000)
         await page.wait_for_load_state("domcontentloaded", timeout=30000)
+        # Wait for the buybox/seller info to fully render via JS
+        try:
+            await page.wait_for_load_state("networkidle", timeout=10000)
+        except Exception:
+            pass
+        await asyncio.sleep(3)
     except:
         await page.close()
         return None

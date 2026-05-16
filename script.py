@@ -262,10 +262,15 @@ async def extract_shipper_and_seller(page):
                 value_txt = (await values.nth(i).inner_text()).strip() if i < val_count else ""
                 if not value_txt:
                     continue
-                if "ship" in label_txt:
+                # Combined "Shipper / Seller" label — assign same value to both
+                if "shipper" in label_txt and "seller" in label_txt:
                     shipper = value_txt
-                if "sold" in label_txt or "seller" in label_txt:
                     seller = value_txt
+                else:
+                    if "ship" in label_txt:
+                        shipper = value_txt
+                    if "sold" in label_txt or "seller" in label_txt:
+                        seller = value_txt
             except:
                 pass
 
@@ -301,12 +306,19 @@ async def extract_shipper_and_seller(page):
                 if not await box.count():
                     continue
                 txt = (await box.inner_text()) or ""
-                m = re.search(r"Ships\s+from[:\s]+([^\n]+)", txt, re.IGNORECASE)
+                # Check for combined "Shipper / Seller" label first
+                m = re.search(r"Shipper\s*/\s*Seller[:\s]+([^\n]+)", txt, re.IGNORECASE)
                 if m:
-                    shipper = m.group(1).strip().split("\n")[0].strip()
-                m = re.search(r"Sold\s+by[:\s]+([^\n]+)", txt, re.IGNORECASE)
-                if m:
-                    seller = m.group(1).strip().split("\n")[0].strip()
+                    val = m.group(1).strip().split("\n")[0].strip()
+                    shipper = val
+                    seller = val
+                else:
+                    m = re.search(r"Ships\s+from[:\s]+([^\n]+)", txt, re.IGNORECASE)
+                    if m:
+                        shipper = m.group(1).strip().split("\n")[0].strip()
+                    m = re.search(r"Sold\s+by[:\s]+([^\n]+)", txt, re.IGNORECASE)
+                    if m:
+                        seller = m.group(1).strip().split("\n")[0].strip()
                 if shipper != "N/A" or seller != "N/A":
                     break
             except:
@@ -337,12 +349,19 @@ async def extract_shipper_and_seller(page):
         # Method 5: full body scan
         try:
             body = (await page.locator("body").inner_text()) or ""
-            m = re.search(r"Ships\s+from[:\s]+([^\n]{2,60})", body, re.IGNORECASE)
+            # Check for combined "Shipper / Seller" first
+            m = re.search(r"Shipper\s*/\s*Seller[:\s]+([^\n]{2,60})", body, re.IGNORECASE)
             if m:
-                shipper = m.group(1).strip()
-            m = re.search(r"Sold\s+by[:\s]+([^\n]{2,60})", body, re.IGNORECASE)
-            if m:
-                seller = m.group(1).strip()
+                val = m.group(1).strip()
+                shipper = val
+                seller = val
+            else:
+                m = re.search(r"Ships\s+from[:\s]+([^\n]{2,60})", body, re.IGNORECASE)
+                if m:
+                    shipper = m.group(1).strip()
+                m = re.search(r"Sold\s+by[:\s]+([^\n]{2,60})", body, re.IGNORECASE)
+                if m:
+                    seller = m.group(1).strip()
         except:
             pass
 

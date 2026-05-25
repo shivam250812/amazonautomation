@@ -595,8 +595,8 @@ async def process_keyword(context, keyword, writer, out_fp, min_price=None, max_
 
     urls = list(urls_set)
 
-    # Reduced to 1 to prevent memory crashes on 4GB VPS
-    semaphore = asyncio.Semaphore(1)
+    # Increased to 4 based on user preference (i5 CPU, 6GB RAM)
+    semaphore = asyncio.Semaphore(4)
     write_lock = asyncio.Lock()
 
     async def bound_scrape(url):

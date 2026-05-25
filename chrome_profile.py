@@ -296,6 +296,12 @@ async def create_browser(p, *, require_helium: bool = True, is_setup_mode: bool 
         "--disable-infobars",
         "--no-first-run",
         "--no-default-browser-check",
+        "--disable-dev-shm-usage",
+        "--no-sandbox",
+        "--disable-gpu",
+        "--js-flags=--max-old-space-size=512",
+        "--disable-background-networking",
+        "--disable-extensions-except=" + str(helium_ext) if require_helium and not is_setup_mode else "",
     ] + args_extra
 
     print(" Starting Chrome (max ~2 min)…\n")

@@ -526,16 +526,22 @@ async def scrape_product(context, url):
 
 # ─── Keyword Processing ───────────────────────────────────────────────────────
 
+import time
+LAST_LOGIN_CHECK = 0
+
 async def process_keyword(context, keyword, writer, out_fp, min_price=None, max_price=None):
     print(f"\n {keyword}")
     
-    # Verify the Amazon session mid-scrape (takes ~5s if already logged in)
-    try:
-        from auto_login import amazon_auto_login
-        print(" [Auto-Login] Verifying Amazon Seller Central session before keyword scrape...")
-        await amazon_auto_login(context)
-    except ImportError:
-        pass
+    global LAST_LOGIN_CHECK
+    # Verify the Amazon session mid-scrape only once per hour to avoid 4s overhead per keyword
+    if time.time() - LAST_LOGIN_CHECK > 3600:
+        try:
+            from auto_login import amazon_auto_login
+            print("\n [Auto-Login] Periodic 1-hour verification of Amazon Seller Central session...")
+            await amazon_auto_login(context)
+            LAST_LOGIN_CHECK = time.time()
+        except ImportError:
+            pass
 
     max_pages = int(os.getenv("SEARCH_PAGES", "20"))
     max_pages = max(1, min(max_pages, 20))
@@ -759,8 +765,11 @@ async def run_scraper(keywords: list[str], min_price: str = None, max_price: str
         
         try:
             from auto_login import amazon_auto_login
+            import time
+            global LAST_LOGIN_CHECK
             print("\n [Auto-Login] Verifying Amazon Seller Central session...")
             await amazon_auto_login(context)
+            LAST_LOGIN_CHECK = time.time()
         except ImportError:
             print("\n [Auto-Login] auto_login.py not found. Skipping auto-login.")
 

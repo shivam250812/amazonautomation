@@ -748,6 +748,13 @@ async def run_scraper(keywords: list[str], min_price: str = None, max_price: str
                 print(f" Auto-clean failed: {e}")
 
         context = await create_browser(p, require_helium=not SETUP_ONLY, is_setup_mode=SETUP_ONLY)
+        
+        try:
+            from auto_login import amazon_auto_login
+            print("\n [Auto-Login] Verifying Amazon Seller Central session...")
+            await amazon_auto_login(context)
+        except ImportError:
+            print("\n [Auto-Login] auto_login.py not found. Skipping auto-login.")
 
         if SETUP_ONLY:
             page = await context.new_page()
